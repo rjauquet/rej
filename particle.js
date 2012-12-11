@@ -39,8 +39,16 @@ function getParticles(num){
 }
 
 function update(){
+    var toNext = 0;
     for(var i=0; i<cur.length; i++){
-        cur[i].x += (next[i].x-cur[i].x)/speed;
+        var dx = (next[i].x-cur[i].x)/speed;
+        var dy = (next[i].y-cur[i].y)/speed;
+        var drad = (next[i].rad-cur[i].rad)/speed;
+        var dr = Math.floor((next[i].r-cur[i].r)/speed);
+        var dg = Math.floor((next[i].g-cur[i].g)/speed);
+        var db = Math.floor((next[i].b-cur[i].b)/speed);
+        
+        cur[i].x += dx;
         if(cur[i].x < 0){
             cur[i].x = 0;
         }
@@ -48,7 +56,7 @@ function update(){
             cur[i].x = canvas.width - 1;
         }
         
-        cur[i].y += (next[i].y-cur[i].y)/speed;
+        cur[i].y += dy;
         if(cur[i].y < 0){
             cur[i].y = 0;
         }
@@ -56,14 +64,14 @@ function update(){
             cur[i].y= canvas.height - 1;
         }
         
-        cur[i].rad += (next[i].rad-cur[i].rad)/speed;
+        cur[i].rad += drad
         if(cur[i].rad < 3){
             cur[i].rad = 3;
         }
         else if(cur[i].rad > 25){
             cur[i].rad = 25;
         }
-        cur[i].r += Math.floor((next[i].r-cur[i].r)/speed);
+        cur[i].r += dr;
         if(cur[i].r < 0){
             cur[i].r = 0;
         }
@@ -71,7 +79,7 @@ function update(){
             cur[i].r = 255;
         }
         
-        cur[i].g += Math.floor((next[i].g-cur[i].g)/speed);
+        cur[i].g += dg
         if(cur[i].g < 0){
             cur[i].g = 0;
         }
@@ -79,17 +87,23 @@ function update(){
             cur[i].g = 255;
         }
         
-        cur[i].b += Math.floor((next[i].b-cur[i].b)/speed);
+        cur[i].b += db;
         if(cur[i].b < 0){
             cur[i].b = 0;
         }
         else if(cur[i].b > 255){
             cur[i].b = 255;
         }
+        canvas.width = $(window).width();
+        canvas.height = $(window).height();
         DrawCanvas();
+        if(dx < .07 && dy < .07){
+            toNext++;            
+        }
     }
-    if((Math.abs(cur[0].x - next[0].x) < 2) && (Math.abs(cur[0].y - next[0].y) < 2)){
-        console.log("here")
+    //transition to next when half of the points have finished moving
+    if(toNext > cur.length/2){
+        toNext = 0;
         cur = next.slice(0);
         next = getParticles(num).slice(0);
     }
