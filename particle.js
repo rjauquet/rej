@@ -14,6 +14,9 @@ function init() {
     // start
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
+    canvas.width = $(window).width();
+    canvas.height = $(window).height();
+    
     num = 100;
     speed = 50; 
     cur = getParticles(num).slice(0);
