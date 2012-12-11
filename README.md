@@ -1,4 +1,4 @@
 rej
 ===
 
-Personal website built using HTML5's canvas tag wherever possible
+Personal website built using javascript and HTML5's canvas tag wherever possible.
