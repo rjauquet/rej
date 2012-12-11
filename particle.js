@@ -1,4 +1,4 @@
-var canvas, ctx, center, cur, next, speed;
+var canvas, ctx, center, cur, next, speed, num;
 
 function particle(x,y,mass,rad,r,g,b){
     this.x=x;
@@ -15,14 +15,17 @@ function init() {
     // start
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
-    var num = 100;
+    num = 100;
     cur = getParticles(num);
+}
+        
+function run(){
     next = getParticles(num); 
     speed = 1000;        
     motion();
-    console.log("here")
+    delete next;
 }
-
+        
 function getParticles(num){
     var particles = new Array();
     for(var i=0; i<num; i++){
@@ -44,7 +47,7 @@ function motion(){
             if(j == speed-1){ 
                 clearInterval(interval)
             }
-         }, 100);
+         }, 1000);
     }
 }
 
@@ -52,11 +55,51 @@ function update(start){
     DrawCanvas(cur); 
     for(var i=0; i<cur.length; i++){
         cur[i].x += (next[i].x-start[i].x)/(i+1);
+        if(cur[i].x < 0){
+            cur[i].x = 0;
+        }
+        else if(cur[i].x > canvas.width - 1){
+            cur[i].x = canvas.width - 1;
+        }
+        
         cur[i].y += (next[i].y-start[i].y)/(i+1);
+        if(cur[i].y < 0){
+            cur[i].y = 0;
+        }
+        else if(cur[i].y > canvas.height - 1){
+            cur[i].y= canvas.height - 1;
+        }
+        
         cur[i].rad += Math.floor((next[i].rad-start[i].rad)/(i+1));
+        if(cur[i].rad < 0){
+            cur[i].rad = 1;
+        }
+        else if(cur[i].rad > 15){
+            cur[i].rad = 15;
+        }
         cur[i].r += Math.floor((next[i].r-start[i].r)/(i+1));
+        if(cur[i].r < 0){
+            cur[i].r = 0;
+        }
+        else if(cur[i].r > 255){
+            cur[i].r = 255;
+        }
+        
         cur[i].g += Math.floor((next[i].g-start[i].g)/(i+1));
+        if(cur[i].g < 0){
+            cur[i].g = 0;
+        }
+        else if(cur[i].g > 255){
+            cur[i].g = 255;
+        }
+        
         cur[i].b += Math.floor((next[i].b-start[i].b)/(i+1));
+        if(cur[i].b < 0){
+            cur[i].b = 0;
+        }
+        else if(cur[i].b > 255){
+            cur[i].b = 255;
+        }
     }
 }
 
