@@ -61,6 +61,8 @@ function setUpDraughts(){
                 y:(5+row)*check,
                 s:20+num               
             });
+            spaces[num].state = 1;
+            spaces[20+num].state = 2;
             num++;
         }
     }
@@ -199,8 +201,8 @@ function drawEnglishDraughts(startx,starty){
             else{
                 ctx.fillStyle = 'white';
                 black = true;
-                spaces[num].x = i*15;
-                spaces[num].y = j*15;
+                spaces[num].x = j*15;
+                spaces[num].y = i*15;
                 num++;
             }
             ctx.fillRect(startx+i*15,starty+j*15,15,15);
@@ -334,20 +336,24 @@ function Dragging(e){
 }
     
 function DragEnd(e){
+    var prevSpace;
     if(drag != null){
         var closest=null,cur,closest = 1000, index = p1[drag].s;
         for(var i=0; i<spaces.length; i++){
               cur = Math.sqrt((p1[drag].x - spaces[i].x)*(p1[drag].x - spaces[i].x) + (p1[drag].y - spaces[i].y)*(p1[drag].y - spaces[i].y));
-            if(cur < closest){
+            //change places if its an empty space, or the original space
+            if(cur < closest && (spaces[i].state == 0 || p1[drag].s == i)){
                 closest = cur;
                 index = i;               
             }
         }
-            
+        prevSpace = p1[drag].s;    
         p1[drag].x = spaces[index].x;
         p1[drag].y = spaces[index].y;
         p1[drag].s = index;
         spaces[index].state = 1;
+        spaces[prevSpace].state = 0; 
+        
         drag = null;
         canvas.style.cursor = "default";
         DrawCanvas();
