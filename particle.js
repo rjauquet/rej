@@ -1,4 +1,4 @@
-var canvas, ctx, center, cur, next, speed, num, p1, p2, spaces, check, checkrad, rgbp1, rgbp2, drag=null,dPoint, boardx, boardy;
+var canvas, ctx, center, cur, next, speed, num, p1, p2, spaces, check, checkrad, rgbp1, rgbp2, drag=null,dPoint, boardx, boardy, playerTurn=true, gameover = false, winner = 0;
 
 function particle(x,y,rad,r,g,b){
     this.x=x;
@@ -46,7 +46,8 @@ function setUpDraughts(){
         spaces.push({
             x:0,
             y:0,
-            state: 0
+            state: 0,
+            next: null
         });
     }
     for(var row=0; row<3; row++){
@@ -54,12 +55,14 @@ function setUpDraughts(){
             p1.push({
                 x:2*i*check+(check*(row%2)),
                 y:row*check,
-                s:num        
+                s:num,
+                king:false                
             });
             p2.push({
                 x:2*i*check+(check*((row+1)%2)), 
                 y:(5+row)*check,
-                s:20+num               
+                s:20+num,
+                king:false                
             });
             spaces[num].state = 1;
             spaces[20+num].state = 2;
@@ -179,6 +182,13 @@ function DrawCanvas() {
     boardy = canvas.height-(8*15+10);
     drawText(canvas.width/6,0,canvas.width*2/3);
     drawEnglishDraughts(boardx,boardy);
+    if(gameover){
+        ctx.font = '14px Calibri';
+        ctx.fillStyle = 'white';
+        var text = "Player " + winner + " wins!";
+        ctx.fillText("GAME OVER", boardx, boardy-22);
+        ctx.fillText(text, boardx, boardy-10);
+    }
     ctx.closePath();
 }
 
@@ -203,6 +213,7 @@ function drawEnglishDraughts(startx,starty){
                 black = true;
                 spaces[num].x = j*15;
                 spaces[num].y = i*15;
+                spaces[num].next = getNext(num,i%2==0);
                 num++;
             }
             ctx.fillRect(startx+i*15,starty+j*15,15,15);
@@ -210,6 +221,45 @@ function drawEnglishDraughts(startx,starty){
         black = !black;           
     }
     drawDraughts(startx,starty);
+}
+    
+function getNext(num,evenRow){
+    var edges = [0,1,2,3,7,8,15,16,23,24,28,29,30,31];
+    if(edges.indexOf(num) == -1){
+        if(evenRow){
+            return [num-5,num-4,num,num+3,num+4];
+        }
+        else{
+            return [num-4,num-3,num,num+4,num+5];
+        }
+    }
+    else if(num == 0){
+        return [0,4];        
+    }
+    else if(num == 1){
+        return [1,4,5];
+    }
+    else if(num == 2){
+        return [2,5,6];
+    }
+    else if(num == 3){
+        return [3,6,7];
+    }
+    else if(num == 28){
+        return [28,24,25];
+    }
+    else if(num == 29){
+        return [29,25,26];
+    }
+    else if(num == 30){
+        return [30,26,27];
+    }
+    else if(num == 31){
+        return [31,27];
+    }
+    else{
+        return [num,num-4,num+4];
+    }
 }
 function drawDraughts(startx,starty){
     ctx.lineWidth = 2;
@@ -313,15 +363,17 @@ function getRGB(red,green,blue,range){
 function DragStart(e){
     e = MousePos(e);
     var dx,dy;
-    for(var i=0; i<p1.length; i++){
-        dx = e.x - (p1[i].x + boardx + checkrad);
-        dy = e.y - (p1[i].y + boardy + checkrad);       
-        if((dx*dx + dy*dy) < checkrad*checkrad){
-            drag = i;
-            dPoint = e;
-            canvas.style.cursor = "none";
-            return;
-        }       
+    if(playerTurn && !gameover){
+        for(var i=0; i<p1.length; i++){
+            dx = e.x - (p1[i].x + boardx + checkrad);
+            dy = e.y - (p1[i].y + boardy + checkrad);       
+            if((dx*dx + dy*dy) < checkrad*checkrad){
+                drag = i;
+                dPoint = e;
+                canvas.style.cursor = "none";
+                return;
+            }       
+        }
     }
 }
     
@@ -340,26 +392,88 @@ function DragEnd(e){
     if(drag != null){
         var closest=null,cur,closest = 1000, index = p1[drag].s;
         for(var i=0; i<spaces.length; i++){
-              cur = Math.sqrt((p1[drag].x - spaces[i].x)*(p1[drag].x - spaces[i].x) + (p1[drag].y - spaces[i].y)*(p1[drag].y - spaces[i].y));
-            //change places if its an empty space, or the original space
-            if(cur < closest && (spaces[i].state == 0 || p1[drag].s == i)){
+            cur = Math.sqrt((p1[drag].x - spaces[i].x)*(p1[drag].x - spaces[i].x) + (p1[drag].y - spaces[i].y)*(p1[drag].y - spaces[i].y));
+            if(cur < closest){
                 closest = cur;
-                index = i;               
-            }
+                index = i;                
+            }  
         }
-        prevSpace = p1[drag].s;    
-        p1[drag].x = spaces[index].x;
-        p1[drag].y = spaces[index].y;
-        p1[drag].s = index;
-        spaces[index].state = 1;
-        spaces[prevSpace].state = 0; 
+        if(isMove(drag,index)){
+            jump(drag,index,1);
+            prevSpace = p1[drag].s;    
+            p1[drag].x = spaces[index].x;
+            p1[drag].y = spaces[index].y;
+            p1[drag].s = index;
+            spaces[index].state = 1;
+            //if it's a jump, deletes piece
+            
         
+            if(index != [prevSpace]){
+                spaces[prevSpace].state = 0;
+                playerTurn = false;
+                computerTurn();
+            }
+            if(inKingRowP1(index)){
+                p1[drag].king = true;            
+            } 
+        }
+        else{
+            p1[drag].x = spaces[p1[drag].s].x;
+            p1[drag].y = spaces[p1[drag].s].y;
+        }
+        
+
         drag = null;
         canvas.style.cursor = "default";
         DrawCanvas();
     }
 }
-        
+
+function isMove(start,end){
+    var move;
+    var moves = availableMoves(start,1);
+    if(moves == null){
+        return false;
+    }
+    for(var i=0; i<moves.length; i++){
+        move = moves[i];
+        if(move[0] == p1[start].s && move[1] == end){
+            return true;
+        }
+    }
+    return false;
+}
+ 
+function jump(start,end,player){
+    var move;
+    var jumps = getJumps(start,1);
+    if(jumps == null){
+        return;
+    }
+    for(var i=0; i<jumps.length; i++){
+        move = jumps[i];
+        if(move[0] == p1[start].s && move[1] == end && move.length == 3){
+            if(player == 1){
+                for(var i=0; i<p2.length; i++){
+                    if(p2[i].s == move[2]){
+                        spaces[p2[i].s].state = 0;
+                        p2.splice(i,1);
+                    }
+                }
+            }
+            else if(player == 2){
+                for(var i=0; i<p1.length; i++){
+                    if(p1[i].s == move[2]){
+                        spaces[p1[i].s].state = 0;
+                        p1.splice(i,1);
+                    }
+                }
+            }
+            
+        }
+    }
+}
+    
 function MousePos(event) {
     event = (event ? event : window.event); 
     var pos = findPos(canvas);
@@ -384,4 +498,226 @@ function findPos(e){
         return offs;
     }
     return undefined;
+}
+function inKingRowP1(space){
+    var kingRow = [28,29,30,31];
+    if(kingRow.indexOf(space) != -1){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+function inKingRowP2(space){
+    var kingRow = [0,1,2,3];
+    if(kingRow.indexOf(space) != -1){
+        return true;
+    }
+    else{
+        return false;
+    }
+}  
+function computerTurn(){
+    //get all locations it's possible to move to
+    var moves = getMoves();
+    if(moves == null){
+        gameover = true;
+        winner = 1;
+    }
+    else{
+        //pick a random available move
+        var rand = Math.floor(Math.random()*moves.length);
+        var move = moves[rand];
+        movePC(move[0],move[1]);
+        if(move.length == 3){
+            for(var i=0; i<p2.length; i++){
+                if(p2[i].s == move[0]){
+                    jump(i,move[1],2);
+                }                
+            }       
+        }
+        DrawCanvas();
+    //starting with random choice AI
+    // eventually do these steps, and then move to a procedural AI. 
+        // step one - prevent any jumps    
+        // step two - if step one not taken, look for jumps
+        // step three - if step two not taken, look for safe single space moves
+        // if no safe moves, just take whatever you can get
+
+        
+        playerTurn = true;
+    
+    }
+
+}
+
+function getMoves(){
+    var moves = new Array();
+    
+    for(var i=0;i<p2.length;i++){
+        var mv = availableMoves(i,2);
+        if(mv != null){
+            moves = moves.concat(mv);      
+        }
+    }
+    if(moves.length != 0){
+        return moves;
+    }
+    else{
+        return null;
+    }
+}
+
+function availableMoves(checker,player){
+    var next;
+    var moves = new Array();
+    var jumps = new Array();
+    if(player == 1){
+        next = spaces[p1[checker].s].next;
+        jumps = getJumps(checker,1);
+    }
+    else if(player == 2){
+        next = spaces[p2[checker].s].next;
+        jumps = getJumps(checker,2);
+    }
+    
+    if(checker.king && player == 1){
+        for(var i=0; i<next.length; i++){
+            if(spaces[next[i]].state == 0){
+                moves.push([p1[checker].s,next[i]]);
+            }
+        }
+    }
+    else if(checker.king && player == 2){
+        for(var i=0; i<next.length; i++){
+            if(spaces[next[i]].state == 0){
+                moves.push([p2[checker].s,next[i]]);
+            }
+        }
+    }
+    else if(player == 1){
+        for(var i=0; i<next.length; i++){
+            if(spaces[next[i]].state == 0 && next[i] > p1[checker].s){
+                moves.push([p1[checker].s,next[i]]);
+            }
+        }
+    }
+    else if (player == 2){
+        for(var i=0; i<next.length; i++){
+            if(spaces[next[i]].state == 0 && next[i] < p2[checker].s){
+                moves.push([p2[checker].s,next[i]]);
+            }
+        }
+    }
+
+    moves = moves.concat(jumps);
+
+    if(moves.length > 0){
+        return moves;
+    }
+    else{
+        return null;
+    }
+}
+
+function movePC(from,to){
+    var prevSpace;
+    var checker;
+    for(var i=0; i<p2.length; i++){
+        if(p2[i].s == from){
+            checker = i;
+        }
+    }
+    prevSpace = p2[checker].s;    
+    p2[checker].x = spaces[to].x;
+    p2[checker].y = spaces[to].y;
+    p2[checker].s = to;
+    spaces[to].state = 2;
+    spaces[prevSpace].state = 0;
+
+    if(inKingRowP2(to)){
+        p2[checker].king = true;            
+    }
+    if(playerMovesRemain()){
+        playerTurn = true;
+    }
+    else{
+        gameover = true;
+        winner = 2;
+    }   
+}
+    
+function playerMovesRemain(){
+    var moves = new Array();
+    
+    for(var i=0;i<p1.length;i++){     
+        var mv = availableMoves(i,1);
+        if(mv != null){
+            moves = moves.concat(mv);      
+        }
+    }
+    if(moves.length == 0){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+//checker contains the index of p1 or p2 that we're looking at
+//checker contains the index of p1 or p2 that we're looking at
+function getJumps(checker,player){
+    var checks = new Array();
+    var jumps = new Array();
+        
+    if(player == 1 && p1[checker].king){
+    
+    }
+    else if(player == 2 && p1[checker].king){
+    
+    }
+    else if(player == 1){
+        var next = spaces[p1[checker].s].next;
+        for(var i=0; i<next.length; i++){            
+            if(spaces[next[i]].state == 2 && next[i] > p1[checker].s){                
+                checks.push(next[i]);
+            }
+        }
+        for(var i=0; i<checks.length; i++){
+            var nextcheck = spaces[checks[i]].next;    
+            for(var j=0; j<nextcheck.length; j++){                          
+                if(spaces[nextcheck[j]].state == 0 && nextcheck[j] > checks[i] && isDiagonal(p1[checker].s,nextcheck[j])){
+                    //return the original positon, the position it's moving to, and the location of the checker being jumped
+                    jumps.push([p1[checker].s,nextcheck[j],checks[i]]);
+                }
+            }
+        }
+    }
+    if(player == 2){
+        var next = spaces[p2[checker].s].next;
+        for(var i=0; i<next.length; i++){            
+            if(spaces[next[i]].state == 1 && next[i] < p2[checker].s){                
+                checks.push(next[i]);
+            }
+        }
+        for(var i=0; i<checks.length; i++){
+            var nextcheck = spaces[checks[i]].next;    
+            for(var j=0; j<nextcheck.length; j++){                          
+                if(spaces[nextcheck[j]].state == 0 && nextcheck[j] < checks[i] && isDiagonal(p2[checker].s,nextcheck[j])){
+                    //return the original positon, the position it's moving to, and the location of the checker being jumped
+                    jumps.push([p2[checker].s,nextcheck[j],checks[i]]);
+                }
+            }
+        }
+    }
+    return jumps;
+}
+
+function isDiagonal(start,end){
+    if(Math.abs(start - end) == 7 || Math.abs(start - end) == 9){
+        return true;
+    }
+    else{
+        return false;
+    }
 }​
