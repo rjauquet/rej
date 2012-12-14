@@ -269,6 +269,11 @@ function drawDraughts(startx,starty){
         ctx.beginPath();
         ctx.arc(startx+p1[i].x+check/2,starty+p1[i].y+check/2, checkrad, 0, 2*Math.PI, true);
         ctx.fill();
+        if(p1[i].king){
+            ctx.fillStyle = "rgb("+rgbp2.r+","+rgbp2.g+","+rgbp2.b+")";
+            ctx.fillText("K", startx+p1[i].x+4, starty+p1[i].y+check-4);
+            ctx.fillStyle = "rgb("+rgbp1.r+","+rgbp1.g+","+rgbp1.b+")";
+        }
         ctx.stroke();       
     }
     ctx.strokeStyle = "rgb("+rgbp1.r+","+rgbp1.g+","+rgbp1.b+")";
@@ -277,6 +282,11 @@ function drawDraughts(startx,starty){
         ctx.beginPath();
         ctx.arc(startx+p2[i].x+check/2,starty+p2[i].y+check/2, checkrad, 0, 2*Math.PI, true);
         ctx.fill();
+        if(p2[i].king){
+            ctx.fillStyle = "rgb("+rgbp1.r+","+rgbp1.g+","+rgbp1.b+")";
+            ctx.fillText("K", startx+p2[i].x+4, starty+p2[i].y+check-4);
+            ctx.fillStyle = "rgb("+rgbp2.r+","+rgbp2.g+","+rgbp2.b+")";
+        }
         ctx.stroke();
     }
 }  
@@ -399,6 +409,7 @@ function DragEnd(e){
             }  
         }
         if(isMove(drag,index)){
+            if(p1[drag].king){console.log("king")}
             jump(drag,index,1);
             prevSpace = p1[drag].s;    
             p1[drag].x = spaces[index].x;
@@ -407,15 +418,14 @@ function DragEnd(e){
             spaces[index].state = 1;
             //if it's a jump, deletes piece
             
-        
-            if(index != [prevSpace]){
+            if(index != prevSpace){
                 spaces[prevSpace].state = 0;
                 playerTurn = false;
                 computerTurn();
             }
             if(inKingRowP1(index)){
                 p1[drag].king = true;            
-            } 
+            }  
         }
         else{
             p1[drag].x = spaces[p1[drag].s].x;
@@ -446,30 +456,32 @@ function isMove(start,end){
  
 function jump(start,end,player){
     var move;
-    var jumps = getJumps(start,1);
+    var jumps = getJumps(start,player);
     if(jumps == null){
         return;
     }
     for(var i=0; i<jumps.length; i++){
         move = jumps[i];
-        if(move[0] == p1[start].s && move[1] == end && move.length == 3){
-            if(player == 1){
+        if(player == 1){
+            if(move[0] == p1[start].s && move[1] == end && move.length == 3){
                 for(var i=0; i<p2.length; i++){
                     if(p2[i].s == move[2]){
                         spaces[p2[i].s].state = 0;
                         p2.splice(i,1);
                     }
                 }
-            }
-            else if(player == 2){
+            }          
+        }
+        else if(player == 2){
+            if(move[0] == p2[start].s && move[1] == end && move.length == 3){
                 for(var i=0; i<p1.length; i++){
-                    if(p1[i].s == move[2]){
+
+                    if(p1[i].s == move[2]){                        
                         spaces[p1[i].s].state = 0;
                         p1.splice(i,1);
                     }
                 }
             }
-            
         }
     }
 }
@@ -521,15 +533,24 @@ function inKingRowP2(space){
 function computerTurn(){
     //get all locations it's possible to move to
     var moves = getMoves();
+    var move = null;
     if(moves == null){
         gameover = true;
         winner = 1;
     }
     else{
-        //pick a random available move
-        var rand = Math.floor(Math.random()*moves.length);
-        var move = moves[rand];
-        movePC(move[0],move[1]);
+        for(var i=0; i<moves.length;i++){
+            //for no particular reason, takes the last jump added. 
+            if(moves[i].length == 3){
+                move = moves[i];
+            }
+        }
+        //if a jump wasn't taken, pick a random move
+        if(move == null){
+            //pick a random available move
+            var rand = Math.floor(Math.random()*moves.length);
+            move = moves[rand];
+        }
         if(move.length == 3){
             for(var i=0; i<p2.length; i++){
                 if(p2[i].s == move[0]){
@@ -537,6 +558,7 @@ function computerTurn(){
                 }                
             }       
         }
+        movePC(move[0],move[1]);
         DrawCanvas();
     //starting with random choice AI
     // eventually do these steps, and then move to a procedural AI. 
@@ -582,31 +604,35 @@ function availableMoves(checker,player){
         jumps = getJumps(checker,2);
     }
     
-    if(checker.king && player == 1){
-        for(var i=0; i<next.length; i++){
-            if(spaces[next[i]].state == 0){
-                moves.push([p1[checker].s,next[i]]);
+    if(player == 1){
+        if(p1[checker].king){
+            for(var i=0; i<next.length; i++){
+                if(spaces[next[i]].state == 0){
+                    moves.push([p1[checker].s,next[i]]);
+                }
+            }
+        }
+        else{
+            for(var i=0; i<next.length; i++){
+                if(spaces[next[i]].state == 0 && next[i] > p1[checker].s){
+                    moves.push([p1[checker].s,next[i]]);
+                }
             }
         }
     }
-    else if(checker.king && player == 2){
-        for(var i=0; i<next.length; i++){
-            if(spaces[next[i]].state == 0){
-                moves.push([p2[checker].s,next[i]]);
+    else if(player == 2){
+        if(p2[checker].king){
+            for(var i=0; i<next.length; i++){
+                if(spaces[next[i]].state == 0){
+                    moves.push([p2[checker].s,next[i]]);
+                }
             }
         }
-    }
-    else if(player == 1){
-        for(var i=0; i<next.length; i++){
-            if(spaces[next[i]].state == 0 && next[i] > p1[checker].s){
-                moves.push([p1[checker].s,next[i]]);
-            }
-        }
-    }
-    else if (player == 2){
-        for(var i=0; i<next.length; i++){
-            if(spaces[next[i]].state == 0 && next[i] < p2[checker].s){
-                moves.push([p2[checker].s,next[i]]);
+        else{
+            for(var i=0; i<next.length; i++){
+                if(spaces[next[i]].state == 0 && next[i] < p2[checker].s){
+                    moves.push([p2[checker].s,next[i]]);
+                }
             }
         }
     }
@@ -664,17 +690,45 @@ function playerMovesRemain(){
         return true;
     }
 }
-//checker contains the index of p1 or p2 that we're looking at
+
 //checker contains the index of p1 or p2 that we're looking at
 function getJumps(checker,player){
     var checks = new Array();
     var jumps = new Array();
         
     if(player == 1 && p1[checker].king){
-    
+        var next = spaces[p1[checker].s].next;
+        for(var i=0; i<next.length; i++){            
+            if(spaces[next[i]].state == 2){                
+                checks.push(next[i]);
+            }
+        }
+        for(var i=0; i<checks.length; i++){
+            var nextcheck = spaces[checks[i]].next;    
+            for(var j=0; j<nextcheck.length; j++){                          
+                if(spaces[nextcheck[j]].state == 0 && isDiagonal(p1[checker].s,nextcheck[j])){
+                    //return the original positon, the position it's moving to, and the location of the checker being jumped
+                    jumps.push([p1[checker].s,nextcheck[j],checks[i]]);
+                }
+            }
+        }
     }
-    else if(player == 2 && p1[checker].king){
-    
+    else if(player == 2 && p2[checker].king){
+        var next = spaces[p2[checker].s].next;
+        for(var i=0; i<next.length; i++){            
+            if(spaces[next[i]].state == 1){               
+                checks.push(next[i]);
+            }
+        }
+        for(var i=0; i<checks.length; i++){
+            var nextcheck = spaces[checks[i]].next;    
+            for(var j=0; j<nextcheck.length; j++){                          
+                if(spaces[nextcheck[j]].state == 0 && isDiagonal(p2[checker].s,nextcheck[j])){
+                    //return the original positon, the position it's moving to, and the location of the checker being jumped
+                    jumps.push([p2[checker].s,nextcheck[j],checks[i]]);
+                }
+            }
+        }
     }
     else if(player == 1){
         var next = spaces[p1[checker].s].next;
@@ -696,7 +750,7 @@ function getJumps(checker,player){
     if(player == 2){
         var next = spaces[p2[checker].s].next;
         for(var i=0; i<next.length; i++){            
-            if(spaces[next[i]].state == 1 && next[i] < p2[checker].s){                
+            if(spaces[next[i]].state == 1 && next[i] < p2[checker].s){               
                 checks.push(next[i]);
             }
         }
