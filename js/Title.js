@@ -1,4 +1,7 @@
 //title object, either image or text
-function title(){
-
+function Title(){
+	this.draw = draw;
+	function draw(){
+	
+	}
 }
