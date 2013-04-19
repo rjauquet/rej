@@ -10,7 +10,7 @@ function Background(){
 	this.draw = draw;
 	function draw(ctx){
 		if(this.img != false){
-			//draw image
+			ctx.drawImage(this.img, 0, 0, ctx.canvas.width, ctx.canvas.height);
 		}
 		else{
 			var grd;

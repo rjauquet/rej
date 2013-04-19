@@ -1,4 +1,5 @@
-function Foreground(){
+//must pass in the active information to load first
+function Foreground(pos,text,img){
 	this.color = {
 		primary: {r:0,g:0,b:0},
 		secondary: {r:0,g:0,b:0}
@@ -15,9 +16,9 @@ function Foreground(){
 		opacity: 0.5
 	};
 	
-	this.active = new Display();
+	this.active = new Display([{pos:pos,text:text,img:img,width:FORE_WIDTH,height:MIN_HEIGHT}]);
 	this.displays = [];
-//	this.displays.push(active);
+	this.displays.push(this.active);
 	
 	this.draw = draw;
 	function draw(ctx){
@@ -43,7 +44,7 @@ function Foreground(){
 
 	this.addDisplay = addDisplay;
 	function addDisplay(){
-		displays.push(new Display());
+		displays.push(new Display([]));
 	}
 	
 	//sets both at once (no gradient)
