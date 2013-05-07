@@ -8,8 +8,8 @@ var BANNER_HEIGHT = 100;
 
 //these are not constants
 var FORE_POS = {
-	X: 0,
-	Y: BANNER_HEIGHT + 5
+	x: 0,
+	y: BANNER_HEIGHT + 30
 };
 
 
@@ -29,7 +29,7 @@ function Site(canvas){
 	this.canvas.height = window.innerHeight;
 	this.canvas.width = window.innerWidth;
 	
-	FORE_POS.X = this.canvas.width/2 - FORE_WIDTH/2;
+	FORE_POS.x = this.canvas.width/2 - FORE_WIDTH/2;
 	
 	this.background = new Background();
 	this.foreground = new Foreground();
