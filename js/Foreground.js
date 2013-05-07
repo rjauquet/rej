@@ -1,14 +1,18 @@
 //must pass in the active information to load first
-function Foreground(pos,text,img){
+function Foreground(){
 	this.color = {
 		primary: {r:0,g:0,b:0},
 		secondary: {r:0,g:0,b:0}
 	};
 	
+	this.margin = 10;
+	this.pos = FORE_POS;
+	this.width = FORE_WIDTH;
+	this.height = FORE_HEIGHT;
 	this.shadow = {
 		on: {
-			bottom: false,
-			top: false,
+			bottom: true,
+			top: true,
 			left: true,
 			right: true
 		},
@@ -16,18 +20,21 @@ function Foreground(pos,text,img){
 		opacity: 0.5
 	};
 	
-	this.active = new Display([{pos:pos,text:text,img:img,width:FORE_WIDTH,height:MIN_HEIGHT}]);
-	this.displays = [];
-	this.displays.push(this.active);
+	this.active = null;
 	
 	this.draw = draw;
 	function draw(ctx){
 		var grd;
 		
-		if(this.shadow.on.left && this.shadow.on.right){
+		if((this.shadow.on.left && this.shadow.on.right) && !(this.shadow.on.top && this.shadow.on.bottom)){
 			//draw shadow area
 			ctx.fillStyle = 'rgba(0,0,0,' + this.shadow.opacity + ')';
-			ctx.fillRect(ctx.canvas.width/2 - FORE_WIDTH/2 - this.shadow.size, 0, FORE_WIDTH + 2*this.shadow.size, ctx.canvas.height);
+			ctx.fillRect(this.pos.x - this.shadow.size, this.pos.y, this.width + 2*this.shadow.size, this.height);
+		}
+		else if((this.shadow.on.left && this.shadow.on.right) && (this.shadow.on.top && this.shadow.on.bottom)){
+			//draw shadow area
+			ctx.fillStyle = 'rgba(0,0,0,' + this.shadow.opacity + ')';
+			ctx.fillRect(this.pos.x - this.shadow.size, this.pos.y - this.shadow.size, this.width + 2*this.shadow.size, this.height + 2*this.shadow.size);
 		}
 		
 			
@@ -37,14 +44,22 @@ function Foreground(pos,text,img){
 		grd.addColorStop(1, 'rgb(' + this.color.secondary.r + ',' + this.color.secondary.g + ',' + this.color.secondary.b + ')');
 	
 		ctx.fillStyle = grd;
-		ctx.fillRect (ctx.canvas.width/2 - FORE_WIDTH/2, 0, FORE_WIDTH, ctx.canvas.height);
+		ctx.fillRect (this.pos.x, this.pos.y, this.width, this.height);
 		
-		this.active.draw();
+		if(this.active != null){
+			this.active.draw(ctx);
+		}
 	}
 
-	this.addDisplay = addDisplay;
-	function addDisplay(){
-		displays.push(new Display([]));
+	this.setActivePage = setActivePage;
+	function setActivePage(page){
+		if(page == null){
+			this.active = this.main;
+		}
+		else{
+			this.active = page;
+		}
+		
 	}
 	
 	//sets both at once (no gradient)
@@ -56,7 +71,6 @@ function Foreground(pos,text,img){
 	//sets only primary color
 	this.setPrimaryColor = setPrimaryColor;
 	function setPrimaryColor(color){
-		console.log(color)
 		this.color.primary = color;
 	}
 	

@@ -34,7 +34,6 @@ function Background(){
 	//sets only primary color
 	this.setPrimaryColor = setPrimaryColor;
 	function setPrimaryColor(color){
-		console.log(color)
 		this.color.primary = color;
 	}
 	

@@ -1,6 +1,7 @@
 function Banner(width,height){
-	this.title = new Title();
+	this.title = new Title("Rob Jauquet");
 	this.links = [];
+	
 	this.color = {
 		primary: {r:0,g:0,b:0},
 		secondary: {r:0,g:0,b:0}
@@ -36,6 +37,11 @@ function Banner(width,height){
 	
 		ctx.fillStyle = grd;
 		ctx.fillRect (0, 0, this.width, this.height);
+		
+		this.title.draw(ctx);
+		for(var i=0; i<this.links.length; i++){
+			this.links[i].draw(ctx);
+		}
 	}
 	
 	this.addLink = addLink;
