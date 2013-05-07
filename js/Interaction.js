@@ -54,9 +54,8 @@ function touchEnd(e,obj){
 function redirect(e,obj){
 	if(clicked != null){
 		clicked.clicked = false;
-		
-		console.log(clicked)
-		obj.foreground.active = clicked.page;
+
+		obj.setActive(clicked.page);
 		
 		clicked = null;
 		obj.draw();

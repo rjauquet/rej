@@ -42,6 +42,9 @@ function Banner(width,height){
 		for(var i=0; i<this.links.length; i++){
 			this.links[i].draw(ctx);
 		}
+		
+		//draw bottom banner wtih basic site info info@RubyJacket.com
+		
 	}
 	
 	this.addLink = addLink;

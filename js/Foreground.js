@@ -47,6 +47,7 @@ function Foreground(){
 		ctx.fillRect (this.pos.x, this.pos.y, this.width, this.height);
 		
 		if(this.active != null){
+			console.log(this.active.draw)
 			this.active.draw(ctx);
 		}
 	}
