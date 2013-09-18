@@ -1,0 +1,26 @@
+TODO: 
+
+	1) Profile picture
+	2) Social icons
+		a) Delicious.com
+		b) Facebook.com
+		c) Twitter.com
+		d) LinkedIn.com
+		e) Google+.com
+		f) Github.com
+		g) SwoopSrch.com
+		h) MySpace.com
+		i) Vine.com
+	3) 404 page
+	4) Portfolio page
+	5) Social page
+	
+	add in cool things like this 
+	http://jsfiddle.net/Marcel/BP6rq/
+	
+	http://jsfiddle.net/m1erickson/9DLuT/
+	
+	http://jsfiddle.net/ABW8Y/5/
+	
+	
+	
